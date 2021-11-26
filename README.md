@@ -6,7 +6,7 @@ This repository collects all of my add-ons for Home Assistant and was intended f
 
 ## Disclaimer / Potential Issues
 
-This all started with the idea of  [jgoakley] (https://github.com/jgoakley/)  to make an add-on for WeeWx personal weather station to integrate with Hass.Io. Exactly as he wrote, I also have no idea what I'm doing. These Addons are aimed to learn in my spare time and work "as I think it is OK".
+This all started with the idea of  [jgoakley](https://github.com/jgoakley/)  to make an add-on for WeeWx personal weather station to integrate with Hass.Io. Exactly as he wrote, I also have no idea what I'm doing. These Addons are aimed to learn in my spare time and work "as I think it is OK".
 
 ## Installation
 
@@ -20,8 +20,8 @@ https://github.com/anastas78/hassio-addons
 
 ## WeeWX
 Uses the WeeWX program and MQTT to receive data from a weather station. 
-It is an exact copy of latest version of weewx install on ubuntu. It should work with any weather station supported by weewx. Additionally I have added the Interceptor driver as many stations can be monitored through it.
-For correct driver to use, please use the [documentation] (https://weewx.com/docs/) of weewx.
+It is an exact copy of latest version of weewx install on ubuntu. It should work with any weather station supported by weewx. Additionally, I have added the Interceptor driver as many stations can be monitored through it.
+For correct driver to use, please use the [documentation](https://weewx.com/docs/) of weewx.
 
 In the addon configuration are left only the most needed parts of weewx.conf in order to start the program. The configuration file weewx.conf will be stored in the config/weewx directory of HA (as well as the skins and html directories) for easier administration.
 
