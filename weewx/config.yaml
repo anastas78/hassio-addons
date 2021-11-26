@@ -1,0 +1,50 @@
+---
+name: WeeWX
+version: 0.1
+slug: hassio_weewx
+description: Add-on for connecting weather stations to Hass.io using WeeWX and MQTT
+url: https://github.com/anastas78/hassio-addons
+webui: http://[HOST]:[PORT:80]
+startup: application
+boot: auto
+ingress: true
+ingress_port: 80
+panel_icon: mdi:windsock
+panel_title: Weewx
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+services:
+  - mysql:need
+  - mqtt:need
+hassio_api: true
+ports:
+  80/tcp: 80
+  443/tcp: 443
+  8080/tcp: 8080
+ports_description:
+  80/tcp: HTTP Entrance port(Not needed for Ingress)
+  443/tcp: HTTPS/SSL Entrance port(Not needed for Ingress)
+  8080/tcp: Interceptor listening port
+map:
+  - ssl:ro
+  - backup:ro
+  - config:rw
+schema:
+  log_level: list(trace|debug|info|notice|warning|error|fatal)?
+  driver: str
+  latitude: float
+  longitude: float
+  altitude: int
+  altitudeUnit: str
+  location: str
+  units: list(metric|us)
+  database: list(mysql|sqlite)
+  skin: str?
+  mqttHost: str?
+  mqttUser: str?
+  mqttPassword: str?
+  mqttTopic: str?

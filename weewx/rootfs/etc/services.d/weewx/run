@@ -1,0 +1,151 @@
+#!/usr/bin/with-contenv bashio
+
+CONFIG_PATH=/data/options.json
+PERM_WEEWX_DIR=/config/weewx
+CONFIGFILE=$PERM_WEEWX_DIR/weewx.conf
+
+DRIVER=$(bashio::config 'driver')
+LATITUDE=$(bashio::config 'latitude')
+LONGITUDE=$(bashio::config 'longitude')
+ALTITUDE=$(bashio::config 'altitude')
+ALTITUDEUNIT=$(bashio::config 'altitudeUnit')
+LOCATION=$(bashio::config 'location')
+UNITS=$(bashio::config 'units')
+MQTT_HOST=$(bashio::config 'mqttHost')
+MQTT_USER=$(bashio::config 'mqttUser')
+MQTT_PASSWORD=$(bashio::config 'mqttPassword')
+MQTT_TOPIC=$(bashio::config "mqttTopic")
+database=$(bashio::config "database")
+
+
+if [ ! -d $PERM_WEEWX_DIR ]; then  mkdir $PERM_WEEWX_DIR; fi
+
+if [ ! -f $CONFIGFILE ]
+then
+	echo "Copying defaiult config file to data directory." 
+	cp /etc/weewx/weewx.conf $CONFIGFILE
+fi
+
+if [ ! -d $PERM_WEEWX_DIR/skins ]
+then
+	echo "Copying defaiult skin directory." 
+	cp -r /etc/weewx/skins $PERM_WEEWX_DIR/
+fi
+
+if [ ! -d $PERM_WEEWX_DIR/html ]
+then
+	echo "Creating http_root directory." 
+	mkdir $PERM_WEEWX_DIR/html
+fi
+
+sed -i '/[[wx_binding]]/{:a;n;/^\s*database *=/!ba;s#^\s*database =.*$#\tdatabase = archive_'$database'#}' $CONFIGFILE
+
+if [ $database = mysql ] 
+then
+
+	# Require MySQL service to be available
+	if ! bashio::services.available "mysql"; then
+		bashio::log.error \
+			"This add-on requires the MariaDB core add-on 2.0 or newer!"
+		bashio::exit.nok \
+			"Make sure the MariaDB add-on is installed and running"
+	fi
+	bashio::log.info "MySQL service found, fetching credentials ..."
+	mysqlhost=$(bashio::services "mysql" "host")
+	mysqlpassword=$(bashio::services "mysql" "password")
+	mysqlport=$(bashio::services "mysql" "port")
+	mysqlusername=$(bashio::services "mysql" "username")
+	
+	sed -i '/[[MySQL]]/{:a;n;/^\s*host *=/!ba;s#^\s*host = .*$#\thost = '$mysqlhost'#}' $CONFIGFILE
+	sed -i '/[[MySQL]]/{:a;n;/^\s*user *=/!ba;s#^\s*user = .*$#\tuser = '$mysqlusername'#}' $CONFIGFILE
+    sed -i '/[[MySQL]]/{:a;n;/^\s*password *=/!ba;s#^\s*password =.*$#\tpassword = '$mysqlpassword'#}' $CONFIGFILE
+	
+	bashio::log.info $mysqlhost":"$mysqlport":user="$mysqlusername":password="$mysqlpassword
+fi
+
+if ! bashio::services.available "mqtt"; then
+    bashio::log.error "No internal MQTT service found. Please configure the addon!"
+else
+    bashio::log.info "MQTT service found, fetching credentials ..."
+    MQTT_HOST=$(bashio::services mqtt "host")
+    MQTT_USER=$(bashio::services mqtt "username")
+    MQTT_PASSWORD=$(bashio::services mqtt "password")
+	MQTT_PORT=$(bashio::services mqtt "port")
+		
+	bashio::log.info $MQTT_HOST":"$MQTT_PORT":"$MQTT_USER":"$MQTT_PASSWORD":"$MQTT_TOPIC
+
+	
+	if [ ! -z $MQTT_HOST ]
+	then
+		#First run
+		sed -i '/INSERT_SERVER_URL_HERE/ a \
+		\ \ \ \ \ \ \ \ topic = weather\
+		\ \ \ \ \ \ \ \ unit_system = '${UNITS^^}'\
+		' $CONFIGFILE
+		#Config change
+		sed -i "s/unit_system =.*/unit_system = "${UNITS^^}"/g" $CONFIGFILE 
+
+		sed -i 's/INSERT_SERVER_URL_HERE/mqtt:\/\/'$MQTT_USER':'$MQTT_PASSWORD'@'$MQTT_HOST':'$MQTT_PORT'/g' $CONFIGFILE
+		sed -i 's/server_url = .*/server_url = mqtt:\/\/'$MQTT_USER':'$MQTT_PASSWORD'@'$MQTT_HOST':'$MQTT_PORT'/g' $CONFIGFILE
+	fi
+	if grep -q "socketio_enabled = 1"  $CONFIGFILE; then
+		if grep -q "socketio_broker =" $CONFIGFILE; then
+			sed -i 's/socketio_broker = .*/socketio_broker = '$MQTT_HOST'/g' $CONFIGFILE
+		else
+			sed -i '/socketio_enabled = 1/ a \
+		socketio_broker = '$MQTT_HOST'
+		' $CONFIGFILE
+		fi
+		if grep -q "socketio_port =" $CONFIGFILE; then
+			sed -i 's/socketio_port = .*/socketio_port = '$MQTT_PORT'/g' $CONFIGFILE
+		else
+			sed -i '/socketio_enabled = 1/ a \
+		socketio_port = '$MQTT_PORT'
+			' $CONFIGFILE
+		fi
+		if grep -q "socketio_topic =" $CONFIGFILE; then
+			sed -i 's/socketio_topic = .*/socketio_topic = weather\/loop/g' $CONFIGFILE
+		else
+			sed -i '/socketio_enabled = 1/ a \
+		socketio_topic = weather_loop
+		' $CONFIGFILE
+		fi
+		if grep -q "socketio_username =" $CONFIGFILE; then
+			sed -i 's/socketio_username = .*/socketio_username = '$MQTT_USER'/g' $CONFIGFILE
+		else
+			sed -i '/socketio_enabled = 1/ a \
+		socketio_username = '$MQTT_USER'
+		' $CONFIGFILE
+		fi
+		if grep -q "socketio_password =" $CONFIGFILE; then
+			sed -i 's/socketio_password = .*/socketio_password = '$MQTT_PASSWORD'/g' $CONFIGFILE
+		else
+			sed -i '/socketio_enabled = 1/ a \
+		socketio_password = '$MQTT_PASSWORD'
+		' $CONFIGFILE
+		fi
+		
+	fi
+fi
+ESC_PERM_WEEWX_DIR=$(echo $PERM_WEEWX_DIR | sed -e 's/[/]/\\&/g')
+sed -i "s/SQLITE_ROOT =.*/SQLITE_ROOT = ${ESC_PERM_WEEWX_DIR}/g" "${CONFIGFILE}" 
+sed -i "s/SKIN_ROOT =.*/SKIN_ROOT = ${ESC_PERM_WEEWX_DIR}\/skins/g" "${CONFIGFILE}" 
+sed -i "s/HTML_ROOT =.*/HTML_ROOT = ${ESC_PERM_WEEWX_DIR}\/html/g" "${CONFIGFILE}" 
+
+if [ $(bashio::config "skin") = 'belchertown' ]; then
+	bashio::log.info "Skin:" $(bashio::config "skin")
+fi
+
+wee_config --reconfigure --driver=$DRIVER --latitude=$LATITUDE --longitude=$LONGITUDE --altitude=$ALTITUDE,$ALTITUDEUNIT --location=$LOCATION --units=$UNITS --no-prompt --config=$CONFIGFILE
+
+bashio::log.info "Starting weewxd..."
+
+app=weewxd
+
+# Get the weewx location and interpreter.  Default to something sane, but
+# look for overrides from the system defaults.
+WEEWX_BINDIR=/usr/share/weewx/
+WEEWX_PYTHON=python3
+[ -r /etc/default/weewx ] && . /etc/default/weewx
+
+exec $WEEWX_PYTHON $WEEWX_BINDIR/$app --config=$CONFIGFILE
