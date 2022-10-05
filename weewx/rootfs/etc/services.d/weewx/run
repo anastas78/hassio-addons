@@ -38,7 +38,7 @@ then
 	mkdir $PERM_WEEWX_DIR/html
 fi
 
-sed -i '/[[wx_binding]]/{:a;n;/^\s*database *=/!ba;s#^\s*database =.*$#\tdatabase = archive_'$database'#}' $CONFIGFILE
+sed -i '/\[\[wx_binding\]\]/{:a;n;/^\s*database *=/!ba;s#^\s*database =.*$#\tdatabase = archive_'$database'#}' $CONFIGFILE
 
 if [ $database = mysql ] 
 then
@@ -56,9 +56,9 @@ then
 	mysqlport=$(bashio::services "mysql" "port")
 	mysqlusername=$(bashio::services "mysql" "username")
 	
-	sed -i '/[[MySQL]]/{:a;n;/^\s*host *=/!ba;s#^\s*host = .*$#\thost = '$mysqlhost'#}' $CONFIGFILE
-	sed -i '/[[MySQL]]/{:a;n;/^\s*user *=/!ba;s#^\s*user = .*$#\tuser = '$mysqlusername'#}' $CONFIGFILE
-    sed -i '/[[MySQL]]/{:a;n;/^\s*password *=/!ba;s#^\s*password =.*$#\tpassword = '$mysqlpassword'#}' $CONFIGFILE
+	sed -i '/\[\[MySQL\]\]/{:a;n;/^\s*host *=/!ba;s#^\s*host = .*$#\thost = '$mysqlhost'#}' $CONFIGFILE
+	sed -i '/\[\[MySQL\]\]/{:a;n;/^\s*user *=/!ba;s#^\s*user = .*$#\tuser = '$mysqlusername'#}' $CONFIGFILE
+    sed -i '/\[\[MySQL\]\]/{:a;n;/^\s*password *=/!ba;s#^\s*password =.*$#\tpassword = '$mysqlpassword'#}' $CONFIGFILE
 	
 	bashio::log.info $mysqlhost":"$mysqlport":user="$mysqlusername":password="$mysqlpassword
 fi
