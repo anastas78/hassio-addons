@@ -21,11 +21,12 @@ RUN wget -qO - https://weewx.com/keys.html | sudo apt-key add - \
 	&& wget -qO - https://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list 
 
 RUN sudo apt-get update \
-    && sudo apt-get install -y weewx \
+    	&& sudo apt-get install -y weewx \
 	&& apt-get clean autoclean \
-    && apt-get autoremove --yes 
+    	&& apt-get autoremove --yes 
     
-RUN wget https://github.com/anastas78/weewx-mqtt/archive/master.zip -O /tmp/weewx-mqtt.zip && \
+RUN 	wget https://github.com/anastas78/weewx-mqtt/archive/refs/heads/ha-discovery.zip -O /tmp/weewx-mqtt.zip && \
+# afterPR	wget https://github.com/anastas78/weewx-mqtt/archive/master.zip -O /tmp/weewx-mqtt.zip && \
 	wget https://github.com/matthewwall/weewx-interceptor/archive/master.zip -O /tmp/weewx-interceptor.zip && \
 	wget https://github.com/poblabs/weewx-belchertown/releases/download/weewx-belchertown-1.2/weewx-belchertown-release-1.2.tar.gz -O /tmp/belcher.tgz && \
 	cd /tmp && \
