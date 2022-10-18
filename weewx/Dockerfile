@@ -25,7 +25,7 @@ RUN sudo apt-get update \
 	&& apt-get clean autoclean \
     	&& apt-get autoremove --yes 
     
-RUN 	wget https://github.com/anastas78/weewx-mqtt/archive/refs/heads/ha-discovery.zip -O /tmp/weewx-mqtt.zip && \
+RUN 	wget https://github.com/anastas78/weewx-mqtt/archive/refs/heads/ha-discovery-with-lwt.zip -O /tmp/weewx-mqtt.zip && \
 # afterPR	wget https://github.com/anastas78/weewx-mqtt/archive/master.zip -O /tmp/weewx-mqtt.zip && \
 	wget https://github.com/matthewwall/weewx-interceptor/archive/master.zip -O /tmp/weewx-interceptor.zip && \
 	wget https://github.com/poblabs/weewx-belchertown/releases/download/weewx-belchertown-1.2/weewx-belchertown-release-1.2.tar.gz -O /tmp/belcher.tgz && \
