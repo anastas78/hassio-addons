@@ -41,7 +41,7 @@ schema:
   altitude: int
   altitudeUnit: str
   location: str
-  units: list(metric|us)
+  units: list(METRIC|METRICWX|US)
   database: list(mysql|sqlite)
   skin: str?
   mqttHost: str?
