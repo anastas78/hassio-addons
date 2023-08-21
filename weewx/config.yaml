@@ -1,6 +1,6 @@
 ---
 name: WeeWX
-version: 0.12
+version: 0.13
 slug: hassio_weewx
 description: Add-on for connecting personal weather stations to Hass.io using WeeWX and MQTT
 url: https://github.com/anastas78/hassio-addons
